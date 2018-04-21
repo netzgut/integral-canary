@@ -1,4 +1,4 @@
-# ∫ Integral Canary
+# ∫ Integral Canary [![Build Status](https://travis-ci.org/netzgut/integral-canary.svg?branch=master)](https://travis-ci.org/netzgut/integral-canary)
 
 A simple [miner's canary](https://en.wikipedia.org/wiki/Domestic_canary#Miner's_canary) to get some additional
 logging/system status without a big monitoring setup.
