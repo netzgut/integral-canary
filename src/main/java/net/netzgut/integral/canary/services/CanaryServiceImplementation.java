@@ -24,12 +24,12 @@ import org.apache.tapestry5.ioc.annotations.Inject;
 import org.apache.tapestry5.ioc.annotations.Symbol;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.event.Level;
 
 import net.netzgut.integral.canary.CanaryCheck;
 import net.netzgut.integral.canary.CanaryModule.Symbols;
 import net.netzgut.integral.canary.beans.CanaryResult;
 import net.netzgut.integral.canary.beans.CanarySystemState;
+import net.netzgut.integral.canary.beans.LogLevel;
 import net.netzgut.integral.canary.beans.State;
 
 public class CanaryServiceImplementation implements CanaryService {
@@ -98,28 +98,33 @@ public class CanaryServiceImplementation implements CanaryService {
 
     private Consumer<CanaryResult> buildLogFn() {
         BiConsumer<String, Object[]> logger;
-        Level level = this.config.getLogLevel();
-        if (level == Level.WARN) {
-            logger = log::warn;
+        LogLevel level = this.config.getLogLevel();
+        if (level == LogLevel.OFF) {
+            logger = (a, b) -> {
+                // NOOP
+            };
         }
-        else if (level == Level.INFO) {
-            logger = log::info;
+        else if (level == LogLevel.TRACE) {
+            logger = log::trace;
         }
-        else if (level == Level.DEBUG) {
+        else if (level == LogLevel.DEBUG) {
             logger = log::debug;
         }
-        else if (level == Level.TRACE) {
-            logger = log::trace;
+        else if (level == LogLevel.INFO) {
+            logger = log::info;
+        }
+        else if (level == LogLevel.WARN) {
+            logger = log::warn;
         }
         else {
             log.warn("Invalid log level: {}. Fallback to Level.ERROR", level);
             logger = log::error;
         }
 
-        return (result) -> {
-            logger.accept("Canary check failed: {} -> {} - {}",
-                          new String[] { result.getIdentifier(), result.getState().name(), result.getDescription() });
-        };
+        return (result) -> logger.accept("Canary check failed: {} -> {} - {}",
+                                         new String[] { result.getIdentifier(),
+                                                        result.getState().name(),
+                                                        result.getDescription() });
 
     }
 }

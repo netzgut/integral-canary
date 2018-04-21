@@ -17,25 +17,24 @@ package net.netzgut.integral.canary.builder;
 
 import java.util.Optional;
 
-import org.slf4j.event.Level;
-
+import net.netzgut.integral.canary.beans.LogLevel;
 import net.netzgut.integral.canary.services.CanaryConfig;
 
 public class CanaryConfigBuilder {
 
-    private Level logLevel = Level.ERROR;
+    private LogLevel logLevel = LogLevel.ERROR;
 
     public CanaryConfigBuilder() {
         // NOOP
     }
 
-    public CanaryConfigBuilder logLevel(Level logLevel) {
+    public CanaryConfigBuilder logLevel(LogLevel logLevel) {
 
-        this.logLevel = Optional.ofNullable(logLevel).orElse(Level.ERROR);
+        this.logLevel = Optional.ofNullable(logLevel).orElse(LogLevel.ERROR);
         return this;
     }
 
-    public static CanaryConfig build(Level logLevel) {
+    public static CanaryConfig build(LogLevel logLevel) {
         CanaryConfigBuilder builder = new CanaryConfigBuilder();
         builder.logLevel(logLevel);
         return builder.build();
@@ -51,7 +50,7 @@ public class CanaryConfigBuilder {
         return new CanaryConfig() {
 
             @Override
-            public Level getLogLevel() {
+            public LogLevel getLogLevel() {
                 return CanaryConfigBuilder.this.logLevel;
             }
         };

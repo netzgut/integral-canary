@@ -15,12 +15,12 @@
  */
 package net.netzgut.integral.canary.services;
 
-import org.slf4j.event.Level;
+import net.netzgut.integral.canary.beans.LogLevel;
 
 public interface CanaryConfig {
 
-    default Level getLogLevel() {
-        return Level.ERROR;
+    default LogLevel getLogLevel() {
+        return LogLevel.ERROR;
     }
 
 }
