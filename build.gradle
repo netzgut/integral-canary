@@ -1,0 +1,140 @@
+plugins {
+    id 'java'
+    id 'maven'
+    id 'com.github.hierynomus.license' version '0.14.0'
+}
+
+
+group 'net.netzgut.integral'
+version '0.0.1-SNAPSHOT'
+
+
+sourceCompatibility = '1.8'
+targetCompatibility = '1.8'
+
+
+repositories {
+    mavenCentral()
+    jcenter()
+    mavenLocal()
+}
+
+
+project.ext.versions = [
+    slf4j: '1.7.25',
+    tapestry: '5.4.3',
+    // provided
+    servlet: '3.1.0',
+    // test
+    log4j: '1.2.17',
+    testng: '6.12'
+]
+
+
+dependencies {
+    compile "org.slf4j:slf4j-api:${versions.slf4j}"
+    compile "org.apache.tapestry:tapestry-ioc:${versions.tapestry}"
+
+    compileOnly "javax.servlet:javax.servlet-api:${versions.servlet}"
+
+    testCompile "org.slf4j:slf4j-log4j12:${versions.slf4j}"
+    testCompile "org.testng:testng:${versions.testng}"
+}
+
+
+task wrapper(type: Wrapper) { gradleVersion = '4.6' }
+
+
+task pom {
+    doLast {
+        pom {
+            packaging = 'jar'
+            project {
+                inceptionYear '2017'
+                name rootProject.name
+                description 'TBD'
+                url 'https://github.com/netzgut/integral-canary'
+                properties { 'project.build.sourceEncoding' 'UTF-8' }
+                licenses {
+                    license {
+                        name 'The Apache Software License, Version 2.0'
+                        url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                        distribution 'repo'
+                    }
+                }
+                scm {
+                    url 'https://github.com/netzgut/integral-canary'
+                    connection 'scm:git:git://github.com/netzgut/integral-canary.git'
+                    developerConnection 'scm:git:git@github.com:netzgut/integral-canary.git'
+                }
+            }
+        }.withXml { xmlProvider ->
+            
+            // We need to add the compileOnly dependencies manually, maven-plugin isn't supporting it.
+            project.configurations.compileOnly.allDependencies.each { dep ->
+                asNode().dependencies[0].appendNode('dependency').with {
+                    it.appendNode('groupId', dep.group)
+                    it.appendNode('artifactId', dep.name)
+                    it.appendNode('version', dep.version)
+                    it.appendNode('scope', 'provided')
+                }
+            }
+
+            // Sort the dependencies so the order wont change with every invocation
+            def dependenciesNodeList = node.get('dependencies')
+            if (dependenciesNodeList) {
+                def dependenciesNode = dependenciesNodeList.get(0)
+                def dependencyNodeList = dependenciesNode.get('dependency')
+                def sorted = dependencyNodeList.sort { a, b ->
+                    def r = a.get('groupId').text().trim().compareTo(b.get('groupId').text().trim())
+                    if (r != 0) return r
+                    return a.get('artifactId').text().trim().compareTo(b.get('artifactId').text().trim())
+                }
+                dependenciesNode.children().removeAll(dependenciesNode.children())
+                sorted.each { dependenciesNode.append(it) }
+            }
+
+            // Add plugins
+            def plugins = xmlProvider.asNode().appendNode('build').appendNode('plugins')
+            def mavenCompilerPlugin = plugins.appendNode('plugin')
+            mavenCompilerPlugin.appendNode('artifactId').value = 'maven-compiler-plugin'
+            mavenCompilerPlugin.appendNode('version').value = '3.5.1'
+            def mavenCompilerPluginConfiguration = mavenCompilerPlugin.appendNode('configuration')
+            mavenCompilerPluginConfiguration.appendNode('source').value = sourceCompatibility
+            mavenCompilerPluginConfiguration.appendNode('target').value = targetCompatibility
+        }.writeTo('pom.xml')
+    }
+}
+
+task sourcesJar(type: Jar, dependsOn: classes) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+artifacts {
+	archives sourcesJar
+}
+
+test {
+    useTestNG()
+}
+license {
+    header rootProject.file('src/main/resources/META-INF/LICENSE.txt')
+    strictCheck true
+    ext.year = Calendar.getInstance().get(Calendar.YEAR)
+}
+
+uploadArchives {
+    // We need to set the variables if not present
+    ext.snapshot_repository = project.hasProperty('snapshot-repository') ? project.property('snapshot-repository') : ''
+    ext.snapshot_repository_username = project.hasProperty('snapshot-repository-username') ? project.property('snapshot-repository-username') : ''
+    ext.snapshot_repository_password = project.hasProperty('snapshot-repository-password') ? project.property('snapshot-repository-password') : ''
+
+    repositories {
+        mavenDeployer {
+            snapshotRepository(url: snapshot_repository) {
+                authentication(userName: snapshot_repository_username, password: snapshot_repository_password)
+            }
+        }
+    }
+}
