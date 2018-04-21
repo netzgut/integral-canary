@@ -116,6 +116,9 @@ public class CanaryServiceImplementation implements CanaryService {
         else if (level == LogLevel.WARN) {
             logger = log::warn;
         }
+        else if (level == LogLevel.ERROR) {
+            logger = log::error;
+        }
         else {
             log.warn("Invalid log level: {}. Fallback to Level.ERROR", level);
             logger = log::error;
