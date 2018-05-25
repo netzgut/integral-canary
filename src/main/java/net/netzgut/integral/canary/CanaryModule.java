@@ -21,6 +21,8 @@ import org.apache.tapestry5.ioc.annotations.Contribute;
 import org.apache.tapestry5.ioc.services.FactoryDefaults;
 import org.apache.tapestry5.ioc.services.SymbolProvider;
 
+import net.netzgut.integral.canary.beans.LogLevel;
+import net.netzgut.integral.canary.beans.State;
 import net.netzgut.integral.canary.services.CanaryConfig;
 import net.netzgut.integral.canary.services.CanaryService;
 import net.netzgut.integral.canary.services.CanaryServiceImplementation;
@@ -44,7 +46,20 @@ public class CanaryModule {
 
     public static CanaryConfig buildCanaryConfig() {
         return new CanaryConfig() {
-            // default method
+
+            @Override
+            public LogLevel getLogLevel(State state) {
+                switch (state) {
+                    case OK:
+                        return LogLevel.TRACE;
+                    case DEGRADED:
+                        return LogLevel.WARN;
+                    case FAILED:
+                        return LogLevel.ERROR;
+                    default:
+                        throw new RuntimeException("unsupported state: " + state);
+                }
+            }
         };
     }
 
