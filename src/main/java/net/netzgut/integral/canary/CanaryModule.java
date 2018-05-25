@@ -21,6 +21,7 @@ import org.apache.tapestry5.ioc.annotations.Contribute;
 import org.apache.tapestry5.ioc.services.FactoryDefaults;
 import org.apache.tapestry5.ioc.services.SymbolProvider;
 
+import net.netzgut.integral.canary.services.CanaryConfig;
 import net.netzgut.integral.canary.services.CanaryService;
 import net.netzgut.integral.canary.services.CanaryServiceImplementation;
 
@@ -39,6 +40,12 @@ public class CanaryModule {
 
     public static void bind(ServiceBinder binder) {
         binder.bind(CanaryService.class, CanaryServiceImplementation.class);
+    }
+
+    public static CanaryConfig buildCanaryConfig() {
+        return new CanaryConfig() {
+            // default method
+        };
     }
 
 }

@@ -16,11 +16,21 @@
 package net.netzgut.integral.canary.services;
 
 import net.netzgut.integral.canary.beans.LogLevel;
+import net.netzgut.integral.canary.beans.State;
 
 public interface CanaryConfig {
 
-    default LogLevel getLogLevel() {
-        return LogLevel.ERROR;
+    default LogLevel getLogLevel(State state) {
+        switch (state) {
+            case OK:
+                return LogLevel.TRACE;
+            case DEGRADED:
+                return LogLevel.WARN;
+            case FAILED:
+                return LogLevel.ERROR;
+            default:
+                throw new RuntimeException("unsupported state: " + state);
+        }
     }
 
 }
