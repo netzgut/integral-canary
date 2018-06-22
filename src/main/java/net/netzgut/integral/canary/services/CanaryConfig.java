@@ -16,11 +16,10 @@
 package net.netzgut.integral.canary.services;
 
 import net.netzgut.integral.canary.beans.LogLevel;
+import net.netzgut.integral.canary.beans.State;
 
 public interface CanaryConfig {
 
-    default LogLevel getLogLevel() {
-        return LogLevel.ERROR;
-    }
+    LogLevel getLogLevel(State state);
 
 }

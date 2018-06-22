@@ -17,8 +17,12 @@ package net.netzgut.integral.canary.services;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.apache.tapestry5.ioc.annotations.Inject;
 import org.apache.tapestry5.ioc.annotations.Symbol;
@@ -34,13 +38,14 @@ import net.netzgut.integral.canary.beans.State;
 
 public class CanaryServiceImplementation implements CanaryService {
 
-    private static final Logger          log = LoggerFactory.getLogger(CanaryServiceImplementation.class);
+    private static final Logger        log = LoggerFactory.getLogger(CanaryServiceImplementation.class);
 
-    private final List<CanaryCheck>      checks;
-    private final CanaryConfig           config;
-    private final Consumer<CanaryResult> logFn;
+    private final List<CanaryCheck>    checks;
+    private final CanaryConfig         config;
 
-    private final boolean                enabled;
+    private final boolean              enabled;
+
+    private final Map<State, LogLevel> logLevels;
 
     public CanaryServiceImplementation(List<CanaryCheck> checks,
                                        CanaryConfig config,
@@ -50,7 +55,8 @@ public class CanaryServiceImplementation implements CanaryService {
         this.config = config;
         this.enabled = enabled;
 
-        this.logFn = buildLogFn();
+        this.logLevels =
+            Stream.of(State.values()).collect(Collectors.toMap(Function.identity(), this.config::getLogLevel));
 
         if (enabled == false) {
             CanaryServiceImplementation.log.info("Canary is disabled");
@@ -83,7 +89,7 @@ public class CanaryServiceImplementation implements CanaryService {
             results.add(result);
 
             if (result.getState() != State.OK) {
-                this.logFn.accept(result);
+                getLogFn(result.getState()).accept(result);
                 if (State.COMPARATOR.compare(result.getState(), worstState) > 0) {
                     worstState = result.getState();
                 }
@@ -96,9 +102,10 @@ public class CanaryServiceImplementation implements CanaryService {
         return new CanarySystemState(worstState, results);
     }
 
-    private Consumer<CanaryResult> buildLogFn() {
+    private Consumer<CanaryResult> getLogFn(State state) {
         BiConsumer<String, Object[]> logger;
-        LogLevel level = this.config.getLogLevel();
+
+        LogLevel level = this.logLevels.get(state);
         if (level == LogLevel.OFF) {
             logger = (a, b) -> {
                 // NOOP
