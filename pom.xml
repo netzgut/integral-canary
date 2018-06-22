@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>net.netzgut.integral</groupId>
   <artifactId>integral-canary</artifactId>
-  <version>0.0.1</version>
+  <version>0.0.2-SNAPSHOT</version>
   <name>integral-canary</name>
   <description>TBD</description>
   <url>https://github.com/netzgut/integral-canary</url>
